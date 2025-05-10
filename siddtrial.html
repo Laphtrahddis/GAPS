@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IERA</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.run/@google/genai"
+      }
+    }
+  </script>
+  <script type="module">
+    import { GoogleGenAI } from "@google/genai";
+
+    const ai = new GoogleGenAI({ apiKey: "AIzaSyAe5izXy-K1FFkIMG6D3frQDTg3eYngPKI" });
+
+    async function handleInput() {
+      const inputElement = document.querySelector('.input input');
+      const userInput = inputElement.value.trim();
+      if (!userInput) return;
+
+      const prompt = `Emergency Type: FIre/Health/Police
+
+/*Provide a paragraph, ie. a structured data table of whatever data we can induce from the prompt, so for this prompt make it like : 
+Address: 
+Victim: 
+Victim Age: 
+Fire Type:
+etc etc..
+whatever details are relevant to the prompt*/ add a lot of details like 
+Possible condition: 
+Symptoms: 
+DO NOT MISS OUT ON DETAILS, DO NOT FABRICATE DETAILS 
+
+/*Provide a next paragraph to be the reply to the user, make it comforting, like you are a 911 operator, provide necessary instructions to the user to do what in that situation, and tell the user that "an Ambulance/Fire Brigade has been dispatched" and will reach you soon. KEEP THE USER REPLY IN ONE PARAGRAPH, NO POINTS (1,2,3)"
+
+KEEP THE USER REPLY IN ONE PARAGRAPH, No Asterisk(*), in the answer
+
+PROMPT:
+${userInput}`;
+
+      try {
+        const response = await ai.models.generateContent({
+          model: "gemini-2.0-flash",
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+        });
+
+        const responseText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        const searchResultElement = document.querySelector('.search-result .answer');
+        searchResultElement.textContent = responseText;
+
+        // Speak the result
+        speak(responseText, 1.5);
+
+        // Clear input
+        inputElement.value = "";
+      } catch (err) {
+        console.error("Error generating response:", err);
+      }
+    }
+
+    function speak(text, speed) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = speed;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function clearInput() {
+      const inputElement = document.querySelector('.input input');
+      const searchResultElement = document.querySelector('.search-result .answer');
+      inputElement.value = "";
+      searchResultElement.textContent = "";
+    }
+
+    window.addEventListener("beforeunload", function () {
+      window.speechSynthesis.cancel();
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const sendButton = document.querySelector('.input button:first-of-type');
+      const clearButton = document.querySelector('.input button:last-of-type');
+
+      sendButton.addEventListener("click", handleInput);
+      clearButton.addEventListener("click", clearInput);
+    });
+  </script>
+</head>
+<body>
+  <div class="app">
+    <p>IERA</p>
+    <p>What's the issue?</p>
+    <div class="input">
+      <input placeholder="describe your issue...?" />
+      <button>send</button>
+      <button>clear</button>
+    </div>
+    <div class="search-result">
+      <div>
+        <pre class="answer"></pre>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

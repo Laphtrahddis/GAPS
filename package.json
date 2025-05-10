@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^0.12.0",
+    "node": "^22.15.0"
+  }
+}
